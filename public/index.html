@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="./style.css">
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="chat">
+        <div class="msg-block">
+            <div class="msg-block__messages">
+                <ul class="message-list" id="message-list"></ul>
+            </div>
+
+            <form class="msg-block__form" id="message-form">
+                <textarea name="message" id="msg" placeholder="Введите сообщение" id="msg"></textarea>
+                <button type="submit">Отправить</button>
+            </form>
+
+            <div class="modal-login" id="modal-login">
+                <p class="modal-login-msg"></p>
+            </div>
+        </div>
+        <div class="users">
+            <ul class="users-list" id="users-list"></ul>
+            <form class="user-form" id="login-form">
+                <input type="text" name="name" placeholder="Введите имя" maxlength="15">
+                <button type="submit">Войти</button>
+                <span id="login-validate">Введите имя</span>
+            </form>
+            <div id="sucess-login"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+    <script src="./js/socket.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/chat.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>
