@@ -18,7 +18,18 @@ class ModalLogin {
 class UsersList {
     constructor(selector) {
         this.$el = document.querySelector(selector)
+        this.$usersListWrapper = document.querySelector('#users-list-wrapper')
+        this.$toggleBtn = document.querySelector('#toggleBtn')
+        this.$overlay = document.querySelector('#users-overlay')
+
         this.users = []
+        this.initListeners()
+    }
+
+    initListeners() {
+        this.$toggleBtn.addEventListener('click', this.toggleUsersList.bind(this))
+        this.$usersListWrapper.addEventListener('click', e => e.stopPropagation())
+        this.$overlay.addEventListener('click', this.hideUsersList.bind(this))
     }
 
     addUser(user) {
@@ -35,12 +46,35 @@ class UsersList {
         }
     }
 
+    toggleUsersList() {
+        if (this.$usersListWrapper.classList.contains('active')) {
+            this.hideUsersList()
+        } else {
+            this.showUsersList()
+        }
+    }
+
+    hideUsersList() {
+        this.$usersListWrapper.classList.remove('active')
+    }
+
+    showUsersList() {
+        this.$usersListWrapper.classList.add('active')
+    }
+
     renderUsers() {
-        let usersHTML = ''
+        this.$el.innerHTML = ''
         this.users.forEach(user => {
-            usersHTML += `<li>${user.name}</li>`
+            const li = document.createElement('li')
+            li.classList.add('users__item')
+            li.innerHTML = `
+                <div class="users__item-img">
+                    <img src="${user.avatarUrl}" alt="${user.name}_avatar">
+                </div>
+                <p class="users__item-name">${user.name}</p>
+            `
+            this.$el.appendChild(li)
         })
-        this.$el.innerHTML = usersHTML
     }
 }
 
@@ -70,7 +104,7 @@ class LoginForm {
 class MessageForm {
     constructor(selector) {
         this.$el = document.querySelector(selector)
-        this.$area = this.$el.querySelector('textarea')
+        this.$area = this.$el.querySelector('#msg')
         this.$btnSubmit = this.$el.querySelector('button')
 
         this.$btnSubmit.disabled = true
@@ -78,10 +112,11 @@ class MessageForm {
 
     clearForm() {
         this.$area.value = ''
+        this.$btnSubmit.disabled = true
     }
 
     disableValidate() {
-        if (this.$area.value === '') {
+        if (this.$area.textContent === '') {
             this.$btnSubmit.disabled = true
         } else {
             this.$btnSubmit.disabled = false
@@ -92,14 +127,24 @@ class MessageForm {
 class MessageList {
     constructor(selector) {
         this.$el = document.querySelector(selector)
+        this.$el_wrapper = document.querySelector('#message-list-wrapper')
     }
 
-    addMessage(message, withSound = false) {
-        this.renderMessage(message, withSound)
+    addMessage(message, userId, withSound = false) {
+        if (message.user.id === userId) {
+            this.renderMessage(message, withSound, false)
+        } else {
+            this.renderMessage(message, withSound, true)
+        }
+    }
+
+    deleteAllMessages() {
+        this.messages = []
+        this.$el.innerHTML = ''
     }
 
     scrollToEnd() {
-        this.$el.scrollTop = this.$el.scrollHeight
+        this.$el_wrapper.scrollTop = this.$el_wrapper.scrollHeight
     }
 
     playSoundNewMessage() {
@@ -108,12 +153,18 @@ class MessageList {
         audio.autoplay = true
     }
 
-    renderMessage(message, withSound) {
+    renderMessage(message, withSound, reverseCss) {
         if (chat.isLogin) {
             this.$el.innerHTML += `
-            <li class="message">
-                <p class="message-title">${message.user.name} <span>${parseDate(message.date)}</span></p>
-                <p class="message-text">${message.text}</p>
+            <li class="message-item ${reverseCss ? 'reverse' : ''}">
+                <div class="message-item__body">
+                    <p class="message-item__name">${message.user.name}</p>
+                    <p class="message-item__time">${parseDate(message.date)}</p>
+                    <p class="message-item__text">${message.text}</p>
+                </div>
+                <div class="message-item__avatar">
+                    <img src="${message.user.avatarUrl}" alt="avatar">
+                </div>
             </li>
             `
             this.scrollToEnd()
@@ -121,6 +172,27 @@ class MessageList {
                 this.playSoundNewMessage()
             }
         }
+    }
+}
+
+class UserInfoLine {
+    constructor(selector) {
+        this.$el = document.querySelector(selector)
+        this.$usersListBtn = document.querySelector('#toggleBtn')
+    }
+
+    render(user) {
+
+        const div = document.createElement('div')
+        div.classList.add('user-info__img')
+        div.innerHTML = `<img src="${user.avatarUrl}" alt="${user.name}_avatar">`
+
+        const p = document.createElement('p')
+        p.classList.add('user-info__name')
+        p.innerHTML = `${user.name}`
+
+        this.$el.insertBefore(div, this.$usersListBtn)
+        this.$el.insertBefore(p, this.$usersListBtn)
     }
 }
 
@@ -139,6 +211,7 @@ class Chat {
         this.messageForm = new MessageForm('#message-form')
         this.messageList = new MessageList('#message-list')
         this.modalLogin = new ModalLogin('#modal-login')
+        this.userInfoLine = new UserInfoLine('#user-info')
 
         this.modalLogin.showModalLogin('Введите имя пользователя')
         this.initListeners()
@@ -148,7 +221,7 @@ class Chat {
         this.loginForm.$el.addEventListener('submit', this.submitUserLogin.bind(this))
         this.messageForm.$el.addEventListener('submit', this.submitMessageForm.bind(this))
         this.messageForm.$area.addEventListener('input', this.inputMessageHandler.bind(this))
-        this.messageForm.$area.addEventListener('keydown', this.keydownMwssageHandler.bind(this))
+        this.messageForm.$area.addEventListener('keydown', this.keydownMessageHandler.bind(this))
     }
 
     submitUserLogin(e) {
@@ -166,20 +239,35 @@ class Chat {
     }
 
     sendMessage() {
-        const message = this.messageForm.$el.elements.msg.value
+        const message = this.messageForm.$area.textContent
+        this.messageForm.clearForm()
+
+        if (message === '@clear') {
+            socket.emit('clearAllmessages')
+        }
+
+        if (message.startsWith('@clear/')) {
+            const userName = message.split('@clear/')[1]
+            socket.emit('clearmessagesByUserName', userName)
+        }
+
+        if (message.startsWith('@ban/')) {
+            const userName = message.split('@ban/')[1]
+            socket.emit('disconnectByUserName', userName)
+        }
+
         if (message) {
-            this.messageForm.clearForm()
-            this.messageForm.$btnSubmit.disabled = true
             const messageInfo = {
                 user: this.user,
                 text: message,
                 date: Date.now()
             }
+            this.messageForm.$area.textContent = ''
             socket.emit('sendMessage', messageInfo)
         }
     }
 
-    keydownMwssageHandler(e) {
+    keydownMessageHandler(e) {
         if (e.key === 'Enter' && !e.ctrlKey) {
             e.preventDefault()
             this.sendMessage()
@@ -198,25 +286,13 @@ class Chat {
     }
 
     loginUser() {
-        socket.emit('login', { name: this.user.name })
+        socket.emit('login', { name: this.user.name, avatarUrl: this.user.avatarUrl })
         this.isLogin = true
     }
 
-    loadAllMessages(messages) {
-        messages.forEach(message => {
-            this.messageList.addMessage(message, false)
-        })
-    }
-
-    loadAllUsers(users) {
-        users.forEach(user => {
-            this.usersList.addUser(user)
-        })
-    }
-
-    async loadImg(url) {
+    async loadAvatar(url) {
         try {
-            this.avatarUrl = await fetch(url).then(response => response.url)
+            this.user.avatarUrl = await fetch(url).then(response => response.url)
         } catch (e) {
             console.log(e)
         }

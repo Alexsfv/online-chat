@@ -2,7 +2,7 @@ const http = require('http')
 const fs = require('fs')
 const path = require('path')
 const express = require('express')
-const { leaveUser } = require('./serverUtils')
+const { leaveUser, checkAdminCommand } = require('./serverUtils')
 
 const app = express()
 app.use(express.static('public'))
@@ -18,15 +18,14 @@ fs.readFile(
     'utf-8',
     (err, content) => {
         if (err) throw err
-        console.log('2222');
         let { messages, onlineUsers } = JSON.parse(content)
         onlineUsers = []
+
         fs.writeFile(
             path.join(__dirname, 'data', 'chat.json'),
             JSON.stringify({messages, onlineUsers}),
             (err) => {
                 if (err) throw err
-                console.log('Start clean users');
             }
         )
     }
@@ -38,13 +37,13 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', (message) => {
 
-        console.log('sendMessage', message);
-
         fs.readFile(
             path.join(__dirname, 'data', 'chat.json'),
             'utf-8',
             (err, content) => {
                 if (err) throw err
+                if (checkAdminCommand(message, clients, id)) return null
+
                 const { messages, onlineUsers } = JSON.parse(content)
                 messages.push(message)
 
@@ -63,8 +62,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on('login', (user) => {
-        console.log('LOGIN', user);
-
         fs.readFile(
             path.join(__dirname, 'data', 'chat.json'),
             'utf-8',
@@ -78,12 +75,15 @@ io.on('connection', (socket) => {
                 const initialData = {
                     messages,
                     onlineUsers,
-                    initialUserId: id
+                    loggedUser: {
+                        id,
+                        name: user.name,
+                        avatarUrl: user.avatarUrl
+                    }
                 }
 
                 // send init data
                 Object.entries(clients).map(([clientId, client]) => {
-                    console.log(clientId);
                     if (id === clientId) {
                         client.emit('loginUser', initialData)
                     }
@@ -100,7 +100,6 @@ io.on('connection', (socket) => {
                     JSON.stringify({messages, onlineUsers}),
                     (err) => {
                         if (err) throw err
-                        console.log(`User: ${user.name} is online add`)
                     }
                 )
             }
@@ -124,8 +123,11 @@ io.on('connection', (socket) => {
 })
 
 app.get('/', (req, res) => {
-    console.log('Request', req.url);
     res.sendFile('./public/index.html')
+})
+
+app.get('/ban', (req, res) => {
+    res.sendFile('./public/ban/index.html')
 })
 
 app.get('/*', (req, res) => {

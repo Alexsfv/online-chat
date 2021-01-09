@@ -1,0 +1,48 @@
+.msg-block__form {
+    position: relative;
+    display: flex;
+    width: 100%;
+    margin-top: auto;
+    padding: 15px 20px 20px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.msg-block__form-submit {
+    position: absolute;
+    right: 30px;
+    margin: 0 5px;
+    color: #fff;
+    font-size: 20px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+
+.msg-block__form-submit:hover {
+    cursor: pointer;
+    color: rgb(128, 206, 252);
+}
+
+.msg-block__form-area {
+    width: 100%;
+    max-height: 80px;
+    padding: 9px 40px 9px 15px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #fff;
+
+    background-color: #393251;
+    border: none;
+    outline: none;
+    overflow: auto;
+}
+
+.msg-block__form-area::placeholder {
+    color: rgb(150, 150, 150);
+}
+
+.msg-block__form-area:focus {
+    border: none;
+    outline: none;
+}

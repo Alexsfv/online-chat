@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+</head>
+<body>
+    <style>
+        img {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+
+    <img src="./bn.gif" alt="*">
+
+    <script>
+        const audio = new Audio()
+        audio.src = './bn.mp3'
+        audio.autoplay = true
+        setInterval(() => {
+            audio.play()
+        }, 1000);
+    </script>
+</body>
+</html>

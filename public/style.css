@@ -1,24 +1,44 @@
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-.wrapper {
-    overflow: auto;
+body {
+    background-image: url("https://avatanplus.com/files/resources/original/5734d0148258f154a64cd036.png");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    font-family: 'Montserrat', sans-serif, helvetica;
+}
+
+.wrapper-chat {
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 15px;
 }
 
 .chat {
-    display: flex;
-    max-width: 600px;
-    margin: 200px auto;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.msg-block {
     position: relative;
-    width: 60%;
-    height: 400px;
-    background-color: rgb(202, 202, 202);
+    display: flex;
+    max-width: 1000px;
+    min-height: 450px;
+    height: calc(100vh - 30px);
+    margin: 15px auto;
+    justify-content: space-between;
+    background-color:#393251;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 30px #221e30af;
 }
 
 .modal-login {
@@ -29,138 +49,31 @@
     position: absolute;
     display: flex;
     align-items: center;
+    align-content: center;
     justify-content: center;
+    flex-wrap: wrap;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: rgba(8, 155, 223, 0.76);
+    z-index: 2;
+    background-color: #089bdf;
 }
 
-.modal-login-msg {
+.modal-login__msg {
+    width: 100%;
+    margin-bottom: 60px;
+    text-align: center;
     font-size: 26px;
     font-weight: bold;
+    color: azure;
 }
 
-.msg-block__messages {
-    background-color: rgb(194, 152, 152);
-}
-
-.msg-block__form {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.msg-block__form button {
-    margin: 0 5px;
-}
-
-.msg-block__form textarea {
-    display: inline-block;
-    height: 70px;
-    max-width: 260px;
-    width: 100%;
-    resize: none;
-    font-size: 16px;
-}
-
-.msg-block__form textarea::placeholder {
-    color: black;
-}
-
-.message-list {
-    height: 330px;
-    padding: 0;
-    margin: 0;
-    overflow-y: auto;
-}
-
-.message {
-    margin: 0 0 5px;
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-    background-color: rgb(51, 207, 142);
-    list-style-type: none;
-}
-
-.message-title {
-    margin: 0;
-    padding: 3px;
-    font-weight: bold;
-}
-
-.message-title span {
-    font-weight: normal;
-    color: bisque;
-}
-
-.message-text {
-    margin: 0;
-    padding: 0 15px;
-    word-break: break-all;
-}
-
-.users {
-    width: 40%;
-    height: 400px;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid black;
-}
-
-.users-list {
-    height: 280px;
-    margin: 0;
-    padding: 0;
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-.users-list li {
-    margin: 10px;
-    padding: 0;
-    font-weight: bold;
-    list-style-type: none;
-    border-bottom: 1px solid #ccc;
-}
-
-.user-form {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-
-#login-validate {
-    display: none;
-}
-
-#login-validate.active{
-    display: block;
-    margin: 0 auto;
-    color: red;
-}
-
-.user-form input {
-    width: 180px;
-    padding: 5px;
-}
-
-.user-form input::placeholder {
-    color: black;
-}
-
-#sucess-login {
-    background-color: rgb(179, 179, 179);
-}
-
-#sucess-login p {
-    margin: 0;
-    padding: 10px;
-    text-align: center;
-}
-
-#sucess-login span {
-    font-weight: bold;
+@media all and (max-width: 768px) {
+    .chat {
+        margin: 15px auto;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0;
+    }
 }

@@ -1,44 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <link rel="stylesheet" href="./css/users-list.css">
+    <link rel="stylesheet" href="./css/login.css">
+    <link rel="stylesheet" href="./css/message.css">
+    <link rel="stylesheet" href="./css/messageBlock.css">
+    <link rel="stylesheet" href="./css/sendMessageField.css">
+    <link rel="stylesheet" href="./css/user-info.css">
     <link rel="stylesheet" href="./style.css">
-    <title>Document</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>messanger</title>
 </head>
 <body>
 
-    <div class="chat">
-        <div class="msg-block">
-            <div class="msg-block__messages">
-                <ul class="message-list" id="message-list"></ul>
-            </div>
+    <section class="wrapper-chat">
+        <div class="container">
+            <div class="chat">
 
-            <form class="msg-block__form" id="message-form">
-                <textarea name="message" id="msg" placeholder="Введите сообщение" id="msg"></textarea>
-                <button type="submit">Отправить</button>
-            </form>
+                <div class="users" id="users-list-wrapper">
+                    <ul class="users__list" id="users-list">
+                    </ul>
+                </div>
+                <div class="users-overlay" id="users-overlay"></div>
 
-            <div class="modal-login" id="modal-login">
-                <p class="modal-login-msg"></p>
+                <div class="msg-block">
+
+                    <div class="user-info" id="user-info">
+                        <button class="user-info__users-btn" id="toggleBtn">
+                            <i class="fa fa-users" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="msg-block__gradient-top"></div>
+
+                    <div class="msg-block__messages" id="message-list-wrapper">
+                        <ul class="message-list" id="message-list">
+                        </ul>
+                    </div>
+                    <div class="msg-block__gradient-bottom"></div>
+
+
+                    <form class="msg-block__form" id="message-form">
+                        <div class="msg-block__form-area" contenteditable="true" id="msg" placeholder="Введите сообщение"></div>
+                        <button type="submit" class="msg-block__form-submit">
+                            <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+
+
+                <div class="modal-login" id="modal-login">
+                    <p class="modal-login__msg"></p>
+                    <form class="login-form" id="login-form">
+                        <input type="text" class="login-form__input" name="name" placeholder="Введите имя" maxlength="15">
+                        <span id="login-validate" class="login-form__validate">Введите имя</span>
+                        <button type="submit" class="login-form__btn">Войти</button>
+                    </form>
+                    <div id="sucess-login"></div>
+                </div>
+
             </div>
         </div>
-        <div class="users">
-            <ul class="users-list" id="users-list"></ul>
-            <form class="user-form" id="login-form">
-                <input type="text" name="name" placeholder="Введите имя" maxlength="15">
-                <button type="submit">Войти</button>
-                <span id="login-validate">Введите имя</span>
-            </form>
-            <div id="sucess-login"></div>
-        </div>
-    </div>
+    </section>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
-    <script src="./js/socket.js"></script>
     <script src="./js/utils.js"></script>
     <script src="./js/chat.js"></script>
     <script src="./js/main.js"></script>
+    <script src="./js/socket.js"></script>
 </body>
 </html>
