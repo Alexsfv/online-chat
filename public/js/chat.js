@@ -22,7 +22,6 @@ class UsersList {
         this.$toggleBtn = document.querySelector('#toggleBtn')
         this.$overlay = document.querySelector('#users-overlay')
 
-        this.users = []
         this.initListeners()
     }
 
@@ -33,17 +32,15 @@ class UsersList {
     }
 
     addUser(user) {
-        if (user) {
-            this.users.push(user)
-            this.renderUsers()
-        }
-    }
-
-    removeUser(user) {
-        if (user) {
-            this.users = this.users.filter(u => u.id !== user.id)
-            this.renderUsers()
-        }
+        const li = document.createElement('li')
+        li.classList.add('users__item')
+        li.innerHTML = `
+            <div class="users__item-img">
+                <img src="${user.avatarUrl}" alt="${user.name}_avatar">
+            </div>
+            <p class="users__item-name">${user.name}</p>
+        `
+        this.$el.appendChild(li)
     }
 
     toggleUsersList() {
@@ -62,19 +59,9 @@ class UsersList {
         this.$usersListWrapper.classList.add('active')
     }
 
-    renderUsers() {
+    renderAll(users) {
         this.$el.innerHTML = ''
-        this.users.forEach(user => {
-            const li = document.createElement('li')
-            li.classList.add('users__item')
-            li.innerHTML = `
-                <div class="users__item-img">
-                    <img src="${user.avatarUrl}" alt="${user.name}_avatar">
-                </div>
-                <p class="users__item-name">${user.name}</p>
-            `
-            this.$el.appendChild(li)
-        })
+        users.map(user => this.addUser(user))
     }
 }
 
@@ -131,7 +118,7 @@ class MessageList {
     }
 
     addMessage(message, userId, withSound = false) {
-        if (message.user.id === userId) {
+        if (message.user._id === userId) {
             this.renderMessage(message, withSound, false)
         } else {
             this.renderMessage(message, withSound, true)
@@ -139,7 +126,6 @@ class MessageList {
     }
 
     deleteAllMessages() {
-        this.messages = []
         this.$el.innerHTML = ''
     }
 
@@ -258,7 +244,6 @@ class Chat {
 
         if (message) {
             const messageInfo = {
-                user: this.user,
                 text: message,
                 date: Date.now()
             }
@@ -286,7 +271,7 @@ class Chat {
     }
 
     loginUser() {
-        socket.emit('login', { name: this.user.name, avatarUrl: this.user.avatarUrl })
+        socket.emit('login', { name: this.user.name, avatarUrl: this.user.avatarUrl, isOnline: true })
         this.isLogin = true
     }
 

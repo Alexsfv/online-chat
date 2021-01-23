@@ -1,4 +1,4 @@
-const socket = io.connect('http://a0501312.xsph.ru')
+const socket = io.connect('https://chat-alexsfv.herokuapp.com')
 console.log('SOCKET Connected');
 
 socket.on('loginUser', (data) => {
@@ -6,25 +6,19 @@ socket.on('loginUser', (data) => {
     chat.user.name = data.loggedUser.name
     chat.userInfoLine.render(data.loggedUser)
     data.messages.forEach(message => chat.messageList.addMessage(message, chat.user.id, false))
-    data.onlineUsers.forEach(user => chat.usersList.addUser(user))
 })
 
-socket.on('userConnected', (data) => {
-    if (chat.isLogin) {
-        chat.usersList.addUser(data.payload)
+socket.on('updateOnlineUsers', (onlineUsers) => {
+    if (onlineUsers) {
+        chat.usersList.renderAll(onlineUsers)
     }
-})
-
-socket.on('leaveUser', (leftUser) => {
-    chat.usersList.removeUser(leftUser)
 })
 
 socket.on('newMessage', (message) => {
     let withSound = true
-    if (chat.user.id === message.user.id) withSound = false
+    if (chat.user.id === message.user._id) withSound = false
     chat.messageList.addMessage(message, chat.user.id, withSound)
 })
-
 
 // admin comands
 socket.on('deleteAllMessages', () => {

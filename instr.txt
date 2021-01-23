@@ -1,0 +1,15 @@
+Для запуска вебсокетов на sprinthost используется либа socket io
+техподдержка:
+
+Для работы сайтов на Node.js на серверах нашего хостинга используется сервер приложений Phusion Passenger, подключенный как модуль Apache. Одним из технических ограничений данной реализации является невозможность использования WebSocket.
+
+Решением является эмуляции веб-сокетов средствами long polling. Для использования этого метода необходимо настроить приложение для работы на порту 80 и подключить PassengerStickySessions в файле .htaccess сайта:
+
+PassengerStickySessions on
+
+Первый запрос с типом websocket будет обработан с кодом ответа 400, после чего библиотека socket.io переключится в режим polling.
+
+Более подробно об этом методе и его использовании для socket.io можно прочитать здесь:
+
+www.phusionpassenger.com/libra...rence/#passengerstickysessions
+github.com/phusion/passenger-n...e-demo-in-passenger-for-apache

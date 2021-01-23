@@ -1,120 +1,89 @@
 const http = require('http')
-const fs = require('fs')
-const path = require('path')
 const express = require('express')
 const { leaveUser, checkAdminCommand } = require('./serverUtils')
+
+const mongoose = require('mongoose')
+const User = require('./models/user')
+const Message = require('./models/message')
+const { replaceUserId } = require('./models/modelsUtils')
 
 const app = express()
 app.use(express.static('public'))
 
 const server = http.createServer(app)
 const io = require('socket.io')(server);
-
 const clients = {}
 
-// clear onlineUsers after start server
-fs.readFile(
-    path.join(__dirname, 'data', 'chat.json'),
-    'utf-8',
-    (err, content) => {
-        if (err) throw err
-        let { messages, onlineUsers } = JSON.parse(content)
-        onlineUsers = []
-
-        fs.writeFile(
-            path.join(__dirname, 'data', 'chat.json'),
-            JSON.stringify({messages, onlineUsers}),
-            (err) => {
-                if (err) throw err
-            }
-        )
-    }
-)
+mongoose.connect(`mongodb+srv://adm:40yIValcJrx9vwrU@cluster0.z702i.mongodb.net/chat?retryWrites=true&w=majority`, {useNewUrlParser: true, useUnifiedTopology: true})
+User.updateMany({}, { isOnline: false }, (err) => {if (err) throw err})
 
 io.on('connection', (socket) => {
-    const id = Math.random()*100000 * Math.random()*100000 + ''
-    clients[id] = socket
+    const clientId = Math.random()*100000 * Math.random()*100000 + ''
+    clients[clientId] = { socket, user: {}}
+    let user = {}
 
-    socket.on('sendMessage', (message) => {
+    socket.on('login', async (userData) => {
+        try {
+            user = new User(userData)
+            clients[clientId].user = user
+            await user.save(err => {if (err) throw err})
 
-        fs.readFile(
-            path.join(__dirname, 'data', 'chat.json'),
-            'utf-8',
-            (err, content) => {
-                if (err) throw err
-                if (checkAdminCommand(message, clients, id)) return null
+            const messages = await Message.find({})
+                .populate('userId')
+                .lean()
+                .then(messages => replaceUserId(messages))
+            const onlineUsers = await User.find({ isOnline: true })
 
-                const { messages, onlineUsers } = JSON.parse(content)
-                messages.push(message)
-
-                fs.writeFile(
-                    path.join(__dirname, 'data', 'chat.json'),
-                    JSON.stringify({ messages, onlineUsers }),
-                    (err) => {
-                        if (err) throw err
-                        Object.entries(clients).forEach(([_, client]) => {
-                            client.emit('newMessage', message)
-                        })
-                    }
-                )
-            }
-        )
-    })
-
-    socket.on('login', (user) => {
-        fs.readFile(
-            path.join(__dirname, 'data', 'chat.json'),
-            'utf-8',
-            (err, content) => {
-                if (err) throw err
-                const { messages, onlineUsers } = JSON.parse(content)
-                user.id = id
-
-                onlineUsers.push(user)
-
-                const initialData = {
-                    messages,
-                    onlineUsers,
-                    loggedUser: {
-                        id,
-                        name: user.name,
-                        avatarUrl: user.avatarUrl
-                    }
+            const initialData = {
+                messages,
+                onlineUsers,
+                loggedUser: {
+                    id: user._id,
+                    name: user.name,
+                    avatarUrl: user.avatarUrl
                 }
-
-                // send init data
-                Object.entries(clients).map(([clientId, client]) => {
-                    if (id === clientId) {
-                        client.emit('loginUser', initialData)
-                    }
-                })
-
-                Object.entries(clients).map(([clientId, client]) => {
-                    if (clientId !== id) {
-                        client.emit('userConnected', { payload: user })
-                    }
-                })
-
-                fs.writeFile(
-                    path.join(__dirname, 'data', 'chat.json'),
-                    JSON.stringify({messages, onlineUsers}),
-                    (err) => {
-                        if (err) throw err
-                    }
-                )
             }
-        )
-    })
 
-    socket.on('disconnect', () => {
-        if (clients[id]) {
-            delete clients[id]
-            leaveUser(clients, id)
+            // send init data
+            Object.entries(clients).map(([cId, client]) => {
+                if (clientId === cId) {
+                    client.socket.emit('loginUser', initialData)
+                }
+            })
+
+            Object.entries(clients).map(([_, client]) => {
+                client.socket.emit('updateOnlineUsers', onlineUsers)
+            })
+        } catch (e) {
+            console.log(e)
         }
     })
 
+    socket.on('sendMessage', async (message) => {
+        const isAdminCommand = await checkAdminCommand(message, clients, clientId)
+        if (isAdminCommand) return false
+
+        const msg = new Message({userId: user._id, ...message});
+        msg.save(async err => {
+            if (err) throw err
+
+            const msgWithUser = await Message.findById(msg._id)
+                .populate('userId')
+                .lean()
+                .then(message => replaceUserId(message))
+
+            Object.entries(clients).forEach(([_, client]) => {
+                client.socket.emit('newMessage', msgWithUser)
+            })
+        })
+    })
+
+    socket.on('disconnect', async () => {
+        leaveUser(clients, user._id, clientId)
+    })
+
     socket.on('exitUser', () => {
-        leaveUser(clients, id)
+        leaveUser(clients, user._id, clientId)
     })
 
     socket.on('error', (err) => {
@@ -134,6 +103,8 @@ app.get('/*', (req, res) => {
     res.redirect('/')
 })
 
-server.listen(80, () => {
-    console.log(`Server is running on port 80`)
+
+const PORT = process.env.PORT || 3000
+server.listen(PORT, () => {
+    console.log(`Server is running on PORT ${PORT}`)
 })
